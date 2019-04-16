@@ -4,21 +4,44 @@
 
 #include "version.h"
 
-@class MulleObjCSerializable;
-@protocol MulleObjCSerializable < NSCoding>
-@end
-
-@interface MulleObjCSerializable <MulleObjCSerializable>
-@end
+#define PROTOCOLCLASS_INTERFACE( name, ...)  \
+@class name; \
+@protocol name < __VA_ARGS__ >
 
 
-@implementation MulleObjCSerializable
+#define PROTOCOLCLASS_END()  \
+@end  
 
+
+
+
+PROTOCOLCLASS_INTERFACE( MulleObjCSerializable, NSCoding, NSObject)
+
+// @optional, there are now definitions for these provided by the protocolclass
+@optional
+- (void) encodeWithCoder:(NSCoder *) aCoder;
+- (instancetype) initWithCoder:(NSCoder *) aDecoder;
+
+PROTOCOLCLASS_END()
+
+
+#define PROTOCOLCLASS_IMPLEMENTATION( name)  \
+@interface name <name> \
+@end \
+\
+@implementation name
+
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprotocol"
+#pragma clang diagnostic ignored "-Wobjc-root-class"
+
+PROTOCOLCLASS_IMPLEMENTATION( MulleObjCSerializable)
 
 struct coder_context
 {
-   id        self;
-   NSCoder   *coder;
+   id <MulleObjCSerializable>   self;
+   NSCoder                      *coder;
 };
 
 
@@ -32,7 +55,7 @@ static mulle_objc_walkcommand_t
    struct _mulle_objc_ivar    *ivar;
    mulle_objc_ivarid_t        ivarid;
 
-   if( ! (_mulle_objc_property_get_bits( property) & _mulle_objc_property_serializable))
+   if( _mulle_objc_property_get_bits( property) & _mulle_objc_property_nonserializable)
       return( mulle_objc_walk_ok);
 
    ivarid = _mulle_objc_property_get_ivarid( property);
@@ -73,7 +96,7 @@ static mulle_objc_walkcommand_t
    struct _mulle_objc_ivar    *ivar;
    mulle_objc_ivarid_t        ivarid;
 
-   if( ! (_mulle_objc_property_get_bits( property) & _mulle_objc_property_serializable))
+   if( _mulle_objc_property_get_bits( property) & _mulle_objc_property_nonserializable)
       return( mulle_objc_walk_ok);
 
    ivarid = _mulle_objc_property_get_ivarid( property);
@@ -99,12 +122,14 @@ static mulle_objc_walkcommand_t
                                            &ctxt);
 }
 
-@end
+PROTOCOLCLASS_END()
+#pragma clang diagnostic pop
+
 
 
 @interface Hello : NSObject <MulleObjCSerializable>
 
-@property( serializable, assign) int    value;
+@property( assign) int    value;
 
 @end
 
@@ -116,14 +141,13 @@ static mulle_objc_walkcommand_t
 
 @interface World : Hello 
 
-@property( serializable, copy) NSString  *string;
+@property( nonserializable, copy) NSString  *string;
 
 @end
 
 
 @implementation World
 @end
-
 
 
 int  main( int argc, char *argv[])

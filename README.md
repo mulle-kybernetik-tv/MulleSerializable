@@ -1,12 +1,23 @@
 # MulleSerializable
 
+
+## serializable/nonserialiable
+
 Experiment with `MulleObjCSerialiable` protocolclass that adds property
 encoding/decoding by just adding that protocol to a class.
 
 It works! :)
 
+## PROTOCOLCLASS macros
 
-## This project requires mulle-clang 8.0.0 RC2 or better
+Added some C macros to declare protocolclasses somewhat more easily.
+These will move to MulleObjC shortly.
+
+
+
+
+
+# This project requires mulle-clang 8.0.0 RC2 or better
 
 
 ## How to build
